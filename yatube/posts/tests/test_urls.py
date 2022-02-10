@@ -31,7 +31,7 @@ class PostURLTests(TestCase):
                             PostURLTests.post.id}),
         ]
         cls.templates_url_names = {
-            reverse('posts:index'): 'posts/index.html',
+#            reverse('posts:index'): 'posts/index.html',
             reverse('posts:group_posts',
                     kwargs={'slug':
                             PostURLTests.group.slug}): 'posts/group_list.html',
@@ -57,7 +57,7 @@ class PostURLTests(TestCase):
         for request_client in (self.guest_client, self.authorized_client):
             for url in self.urls:
                 with self.subTest(url=url, request_client=request_client):
-                    response = request_client.get(url)
+                    response = request_client.get(url, follow=True)
                     self.assertEqual(response.status_code, HTTPStatus.OK)
         urls = [
             reverse('posts:post_edit',
@@ -67,7 +67,7 @@ class PostURLTests(TestCase):
         ]
         for url in urls:
             with self.subTest(url=url):
-                response = self.authorized_client.get(url)
+                response = self.authorized_client.get(url, follow=True)
                 self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_post_edit_url_redirect_anonymous(self):
