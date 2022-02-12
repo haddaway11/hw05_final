@@ -6,8 +6,8 @@ from .models import Post, Group, User, Follow
 from .forms import PostForm, CommentForm
 
 
-
 QUANTITY: int = 10
+
 
 @cache_page(60 * 20)
 def index(request):
@@ -108,9 +108,10 @@ def post_edit(request, post_id):
     }
     return render(request, 'posts/create_post.html', context)
 
+
 @login_required
 def add_comment(request, post_id):
-    post = get_object_or_404(Post, id=post_id) 
+    post = get_object_or_404(Post, id=post_id)
     form = CommentForm(request.POST or None)
     if form.is_valid():
         comment = form.save(commit=False)
@@ -119,13 +120,15 @@ def add_comment(request, post_id):
         comment.save()
     return redirect('posts:post_detail', post_id=post_id)
 
+
 @login_required
 def follow_index(request):
     posts = Post.objects.filter(author__following__user=request.user)
     paginator = Paginator(posts, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    return render(request, "posts/follow.html", {'page_obj': page_obj, 'paginator': paginator})
+    return render(request, "posts/follow.html",
+                  {'page_obj': page_obj, 'paginator': paginator})
 
 
 @login_required
@@ -135,7 +138,6 @@ def profile_follow(request, username):
     if not follow and author != request.user:
         Follow.objects.create(user=request.user, author=author)
     return redirect('posts:profile', username)
-
 
 
 @login_required

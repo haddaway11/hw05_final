@@ -19,6 +19,7 @@ class PostForm(ModelForm):
             'group': 'Группа, к которой будет относиться пост',
         }
 
+
 class CommentForm(ModelForm):
     class Meta:
         model = Comment

@@ -50,7 +50,7 @@ class Post(models.Model):
         'Картинка',
         upload_to='posts/',
         blank=True
-    )  
+    )
 
     class Meta:
         verbose_name = 'Пост'
@@ -59,6 +59,7 @@ class Post(models.Model):
 
     def __str__(self):
         return self.text[:15]
+
 
 class Comment(models.Model):
     post = models.ForeignKey(
@@ -83,6 +84,7 @@ class Comment(models.Model):
 
     class Meta:
         ordering = ('-created',)
+
 
 class Follow(models.Model):
     user = models.ForeignKey(
