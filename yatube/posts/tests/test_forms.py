@@ -1,10 +1,18 @@
+import shutil
+import tempfile
 from http import HTTPStatus
-from django.test import Client, TestCase
+from django.conf import settings
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.cache import cache
 from ..forms import PostForm
-from ..models import Group, Post, User
+from ..models import Group, Post, User, Comment
+
+TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
 
+@override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
 class PostCreateFormTests(TestCase):
     @classmethod
     def setUpClass(cls):
@@ -15,17 +23,37 @@ class PostCreateFormTests(TestCase):
             slug='test-slug',
             description='Тестовое описание',
         )
+        small_gif = (
+            b'\x47\x49\x46\x38\x39\x61\x02\x00'
+            b'\x01\x00\x80\x00\x00\x00\x00\x00'
+            b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
+            b'\x00\x00\x00\x2C\x00\x00\x00\x00'
+            b'\x02\x00\x01\x00\x00\x02\x02\x0C'
+            b'\x0A\x00\x3B'
+        )
+        uploaded = SimpleUploadedFile(
+            name='smalltest.gif',
+            content=small_gif,
+            content_type='image/gif'
+        )
         cls.post = Post.objects.create(
             author=cls.user,
             text='Тестовое содержание поста',
-            group=cls.group
+            group=cls.group,
+            image=uploaded
         )
         cls.form = PostForm()
+
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        shutil.rmtree(TEMP_MEDIA_ROOT, ignore_errors=True)
 
     def setUp(self):
         self.guest_client = Client()
         self.authorized_client = Client()
         self.authorized_client.force_login(PostCreateFormTests.user)
+        cache.clear()
 
     def test_cant_create_post_anonymous(self):
         '''Тестируем запрет записи поста неавторизованным пользователем'''
@@ -48,6 +76,7 @@ class PostCreateFormTests(TestCase):
         form_data = {
             'group': PostCreateFormTests.group.id,
             'text': 'Тестовый текст',
+            'image': PostCreateFormTests.post.image,
         }
         response = self.authorized_client.post(
             reverse('posts:post_create'),
@@ -60,9 +89,29 @@ class PostCreateFormTests(TestCase):
             Post.objects.filter(
                 group=PostCreateFormTests.group,
                 text='Тестовый текст',
-                author=PostCreateFormTests.user
+                author=PostCreateFormTests.user,
+                image='posts/smalltest.gif'
             ).exists()
         )
+
+    def test_add_comment_authorized_client(self):
+        """После проверки формы комментарий добавляется в пост"""
+        form_data = {
+            'text': 'Комментарий',
+        }
+        response = self.authorized_client.post(
+            reverse(
+                'posts:add_comment',
+                kwargs={'post_id': self.post.id}
+            ),
+            data=form_data, follow=True
+        )
+        self.assertRedirects(response, reverse('posts:post_detail', kwargs={
+                             'post_id': PostCreateFormTests.post.id}))
+        self.assertTrue(
+            Comment.objects.filter(
+                text='Комментарий'
+            ).exists())
 
 
 class PostEditFormTests(TestCase):
@@ -90,6 +139,7 @@ class PostEditFormTests(TestCase):
     def setUp(self):
         self.authorized_client = Client()
         self.authorized_client.force_login(PostEditFormTests.user)
+        cache.clear()
 
     def test_edit_post_authorized(self):
         '''Тестируем редактирования поста авторизованным пользователем'''

@@ -1,5 +1,6 @@
 from django.test import TestCase, Client
 from django.urls import reverse
+from django.core.cache import cache
 from http import HTTPStatus
 from ..models import Group, Post, User
 
@@ -31,7 +32,7 @@ class PostURLTests(TestCase):
                             PostURLTests.post.id}),
         ]
         cls.templates_url_names = {
-#            reverse('posts:index'): 'posts/index.html',
+            reverse('posts:index'): 'posts/index.html',
             reverse('posts:group_posts',
                     kwargs={'slug':
                             PostURLTests.group.slug}): 'posts/group_list.html',
@@ -51,6 +52,7 @@ class PostURLTests(TestCase):
         self.guest_client = Client()
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
+        cache.clear()
 
     def test_url_exists_at_desired_location(self):
         """Страницы доступны любому и авторизованным пользователям."""
@@ -90,6 +92,13 @@ class PostURLTests(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
         response = self.authorized_client.get('/unexisting_page/')
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+
+    def test_error_page(self):
+        """Запрос к страница nonexist-page вернет шаблон 404.html"""
+        response = self.guest_client.get('/nonexist_page/')
+        self.assertTemplateUsed(response, 'core/404.html')
+        response = self.authorized_client.get('/nonexist_page/')
+        self.assertTemplateUsed(response, 'core/404.html')
 
     def test_urls_uses_correct_template(self):
         """URL-адрес использует соответствующий шаблон."""

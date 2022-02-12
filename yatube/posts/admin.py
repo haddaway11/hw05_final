@@ -2,7 +2,7 @@ from django.contrib import admin
 
 # Register your models here.
 # Из модуля models импортируем модель Post
-from .models import Post, Group
+from .models import Post, Group, Comment
 
 
 class PostAdmin(admin.ModelAdmin):
@@ -28,3 +28,4 @@ class GroupAdmin(admin.ModelAdmin):
 
 admin.site.register(Group, GroupAdmin)
 admin.site.register(Post, PostAdmin)
+admin.site.register(Comment)
