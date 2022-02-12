@@ -47,10 +47,6 @@ def profile(request, username):
     }
     if request.user.is_authenticated:
         following = Follow.objects.select_related('following').exists()
-#        filter(
-#            author=user,
-#            user=request.user
-#        ).exists()
         context['following'] = following
     return render(request, 'posts/profile.html', context)
 
