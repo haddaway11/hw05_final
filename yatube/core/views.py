@@ -12,8 +12,8 @@ def csrf_failure(request, reason=''):
 
 
 def server_error(request):
-    return render(request, 'core/500.html', {"path": request.path}, status=500)
+    return render(request, 'core/500.html', {'path': request.path}, status=500)
 
 
 def permission_denied(request):
-    return render(request, 'core/403.html', {"path": request.path}, status=403)
+    return render(request, 'core/403.html', {'path': request.path}, status=403)
