@@ -32,7 +32,7 @@ class PostCreateFormTests(TestCase):
             b'\x0A\x00\x3B'
         )
         uploaded = SimpleUploadedFile(
-            name='smalltest.gif',
+            name='small.gif',
             content=small_gif,
             content_type='image/gif'
         )
@@ -90,7 +90,7 @@ class PostCreateFormTests(TestCase):
                 group=PostCreateFormTests.group,
                 text='Тестовый текст',
                 author=PostCreateFormTests.user,
-                image='posts/smalltest.gif'
+                image=Post.objects.first().image #'posts/small.gif'
             ).exists()
         )
 
