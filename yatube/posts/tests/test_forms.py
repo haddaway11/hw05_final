@@ -90,7 +90,7 @@ class PostCreateFormTests(TestCase):
                 group=PostCreateFormTests.group,
                 text='Тестовый текст',
                 author=PostCreateFormTests.user,
-                image=Post.objects.first().image #'posts/small.gif'
+                image=Post.objects.first().image
             ).exists()
         )
 
