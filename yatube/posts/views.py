@@ -1,15 +1,12 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
-from django.views.decorators.cache import cache_page
 from .models import Post, Group, User, Follow
 from .forms import PostForm, CommentForm
-
 
 QUANTITY: int = 10
 
 
-@cache_page(60 * 20)
 def index(request):
 
     posts = Post.objects.select_related('group').all()
@@ -49,10 +46,11 @@ def profile(request, username):
         'following': False,
     }
     if request.user.is_authenticated:
-        following = Follow.objects.filter(
-            author=user,
-            user=request.user
-        ).exists()
+        following = Follow.objects.select_related('following').exists()
+#        filter(
+#            author=user,
+#            user=request.user
+#        ).exists()
         context['following'] = following
     return render(request, 'posts/profile.html', context)
 
@@ -124,7 +122,7 @@ def add_comment(request, post_id):
 @login_required
 def follow_index(request):
     posts = Post.objects.filter(author__following__user=request.user)
-    paginator = Paginator(posts, 10)
+    paginator = Paginator(posts, QUANTITY)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     return render(request, "posts/follow.html",
@@ -135,7 +133,7 @@ def follow_index(request):
 def profile_follow(request, username):
     author = get_object_or_404(User, username=username)
     follow = Follow.objects.filter(user=request.user, author=author).exists()
-    if not follow and author != request.user:
+    if request.user != author and not follow:
         Follow.objects.create(user=request.user, author=author)
     return redirect('posts:profile', username)
 
