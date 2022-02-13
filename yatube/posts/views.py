@@ -8,7 +8,6 @@ QUANTITY: int = 10
 
 
 def index(request):
-
     posts = Post.objects.select_related('group').all()
     paginator = Paginator(posts, QUANTITY)
     page_number = request.GET.get('page')
